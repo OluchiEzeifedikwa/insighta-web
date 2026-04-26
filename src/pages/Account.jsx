@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { csrfPost, clearCsrfToken } from '../lib/csrf';
+import Layout from '../components/Layout';
 
 export default function Account() {
   const [user, setUser] = useState(null);
@@ -14,50 +15,62 @@ export default function Account() {
   }, []);
 
   async function handleLogout() {
-    try {
-      await csrfPost('/auth/logout');
-    } catch {
-      // proceed regardless
-    }
+    try { await csrfPost('/auth/logout'); } catch { /* proceed */ }
     clearCsrfToken();
     navigate('/');
   }
 
-  if (!user) return <p style={{ padding: 24 }}>Loading...</p>;
+  if (!user) return <div style={{ padding: 40, color: '#888' }}>Loading...</div>;
 
   const fields = [
-    ['Username', `@${user.username}`],
-    ['Email', user.email || 'N/A'],
-    ['Role', user.role],
-    ['Status', user.is_active ? 'Active' : 'Inactive'],
-    ['Last Login', user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'N/A'],
-    ['Member Since', new Date(user.created_at).toLocaleString()],
+    { label: 'Username', value: `@${user.username}` },
+    { label: 'Email', value: user.email || 'N/A' },
+    { label: 'Role', value: user.role },
+    { label: 'Status', value: user.is_active ? 'Active' : 'Inactive' },
+    { label: 'Last Login', value: user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'N/A' },
+    { label: 'Member Since', value: new Date(user.created_at).toLocaleString() },
   ];
 
   return (
-    <div style={styles.container}>
-      <button onClick={() => navigate('/dashboard')} style={styles.back}>← Back</button>
-      <h1 style={styles.heading}>Account</h1>
-      <div style={styles.card}>
-        {fields.map(([label, value]) => (
-          <div key={label} style={styles.row}>
-            <span style={styles.label}>{label}</span>
-            <span style={styles.value}>{value}</span>
+    <Layout>
+      <div style={styles.container}>
+        <h1 style={styles.heading}>Account</h1>
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <div style={styles.avatar}>{user.username[0].toUpperCase()}</div>
+            <div>
+              <div style={styles.name}>@{user.username}</div>
+              <span style={{ ...styles.roleBadge, background: user.role === 'admin' ? '#fff3e0' : '#e8f5e9', color: user.role === 'admin' ? '#e65100' : '#2e7d32' }}>
+                {user.role}
+              </span>
+            </div>
           </div>
-        ))}
+          <div style={styles.fields}>
+            {fields.map(({ label, value }) => (
+              <div key={label} style={styles.field}>
+                <span style={styles.label}>{label}</span>
+                <span style={styles.value}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button onClick={handleLogout} style={styles.logoutBtn}>Sign Out</button>
       </div>
-      <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
-    </div>
+    </Layout>
   );
 }
 
 const styles = {
-  container: { padding: '40px', maxWidth: '600px', margin: '0 auto' },
-  back: { background: 'none', border: 'none', cursor: 'pointer', color: '#24292e', marginBottom: '16px', fontSize: '14px', padding: 0 },
-  heading: { fontSize: '28px', marginBottom: '24px' },
-  card: { background: '#fff', border: '1px solid #e0e0e0', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' },
-  row: { display: 'flex', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #e0e0e0' },
-  label: { color: '#666', fontWeight: '500' },
-  value: { fontWeight: '600' },
-  logoutBtn: { background: '#d32f2f', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+  container: { maxWidth: '640px' },
+  heading: { fontSize: '28px', fontWeight: '700', color: '#1a1a2e', marginBottom: '24px' },
+  card: { background: '#fff', borderRadius: '16px', border: '1px solid #e8eaed', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden', marginBottom: '24px' },
+  cardHeader: { display: 'flex', alignItems: 'center', gap: '16px', padding: '24px', borderBottom: '1px solid #e8eaed', background: '#f8f9fa' },
+  avatar: { width: '56px', height: '56px', background: '#1a1a2e', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: '700' },
+  name: { fontSize: '18px', fontWeight: '700', color: '#1a1a2e', marginBottom: '6px' },
+  roleBadge: { padding: '3px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', textTransform: 'capitalize' },
+  fields: {},
+  field: { display: 'flex', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid #f5f5f5' },
+  label: { color: '#888', fontSize: '14px' },
+  value: { fontWeight: '600', color: '#1a1a2e', fontSize: '14px', textTransform: 'capitalize' },
+  logoutBtn: { background: '#d32f2f', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' },
 };

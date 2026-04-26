@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import Layout from '../components/Layout';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -17,39 +18,76 @@ export default function Dashboard() {
     }).catch(() => navigate('/'));
   }, []);
 
-  if (!stats) return <p style={{ padding: 24 }}>Loading...</p>;
+  if (!stats) return <div style={styles.loading}>Loading...</div>;
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>Dashboard</h1>
-      <p style={styles.welcome}>Welcome, @{user?.username}</p>
-      <div style={styles.cards}>
-        <div style={styles.card}>
-          <div style={styles.cardValue}>{stats.total.toLocaleString()}</div>
-          <div style={styles.cardLabel}>Total Profiles</div>
+    <Layout>
+      <div>
+        <div style={styles.header}>
+          <div>
+            <h1 style={styles.heading}>Dashboard</h1>
+            <p style={styles.welcome}>Welcome back, <strong>@{user?.username}</strong></p>
+          </div>
         </div>
-        <div style={styles.card}>
-          <div style={styles.cardValue}>{user?.role}</div>
-          <div style={styles.cardLabel}>Your Role</div>
+
+        <div style={styles.cards}>
+          <div style={styles.card}>
+            <div style={styles.cardIcon}>👥</div>
+            <div style={styles.cardValue}>{stats.total.toLocaleString()}</div>
+            <div style={styles.cardLabel}>Total Profiles</div>
+          </div>
+          <div style={styles.card}>
+            <div style={styles.cardIcon}>🔐</div>
+            <div style={styles.cardValue}>{user?.role}</div>
+            <div style={styles.cardLabel}>Your Role</div>
+          </div>
+          <div style={styles.card}>
+            <div style={styles.cardIcon}>✅</div>
+            <div style={styles.cardValue}>{user?.is_active ? 'Active' : 'Inactive'}</div>
+            <div style={styles.cardLabel}>Account Status</div>
+          </div>
+        </div>
+
+        <div style={styles.quickActions}>
+          <h2 style={styles.sectionTitle}>Quick Actions</h2>
+          <div style={styles.actionCards}>
+            <div style={styles.actionCard} onClick={() => navigate('/profiles')}>
+              <div style={styles.actionIcon}>📋</div>
+              <div style={styles.actionTitle}>Browse Profiles</div>
+              <div style={styles.actionDesc}>View and filter all profiles</div>
+            </div>
+            <div style={styles.actionCard} onClick={() => navigate('/search')}>
+              <div style={styles.actionIcon}>🔍</div>
+              <div style={styles.actionTitle}>Search</div>
+              <div style={styles.actionDesc}>Natural language search</div>
+            </div>
+            <div style={styles.actionCard} onClick={() => navigate('/account')}>
+              <div style={styles.actionIcon}>👤</div>
+              <div style={styles.actionTitle}>Account</div>
+              <div style={styles.actionDesc}>View your profile</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div style={styles.links}>
-        <button onClick={() => navigate('/profiles')} style={styles.btn}>View Profiles</button>
-        <button onClick={() => navigate('/search')} style={styles.btn}>Search</button>
-        <button onClick={() => navigate('/account')} style={styles.btn}>Account</button>
-      </div>
-    </div>
+    </Layout>
   );
 }
 
 const styles = {
-  container: { padding: '40px', maxWidth: '800px', margin: '0 auto' },
-  heading: { fontSize: '28px', marginBottom: '4px' },
-  welcome: { color: '#666', marginBottom: '32px' },
-  cards: { display: 'flex', gap: '16px', marginBottom: '32px' },
-  card: { background: '#fff', border: '1px solid #e0e0e0', borderRadius: '10px', padding: '24px', flex: 1, textAlign: 'center' },
-  cardValue: { fontSize: '36px', fontWeight: '700', marginBottom: '8px' },
-  cardLabel: { color: '#666', fontSize: '14px' },
-  links: { display: 'flex', gap: '12px' },
-  btn: { background: '#24292e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+  loading: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#666' },
+  header: { marginBottom: '32px' },
+  heading: { fontSize: '28px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' },
+  welcome: { color: '#666', fontSize: '15px' },
+  cards: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '40px' },
+  card: { background: '#fff', borderRadius: '12px', padding: '24px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e8eaed' },
+  cardIcon: { fontSize: '28px', marginBottom: '12px' },
+  cardValue: { fontSize: '28px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px', textTransform: 'capitalize' },
+  cardLabel: { color: '#888', fontSize: '13px', fontWeight: '500' },
+  quickActions: {},
+  sectionTitle: { fontSize: '18px', fontWeight: '600', color: '#1a1a2e', marginBottom: '16px' },
+  actionCards: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' },
+  actionCard: { background: '#fff', borderRadius: '12px', padding: '24px', cursor: 'pointer', border: '1px solid #e8eaed', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'transform 0.2s' },
+  actionIcon: { fontSize: '32px', marginBottom: '12px' },
+  actionTitle: { fontWeight: '600', color: '#1a1a2e', marginBottom: '4px' },
+  actionDesc: { color: '#888', fontSize: '13px' },
 };

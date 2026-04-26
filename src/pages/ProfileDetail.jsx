@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import Layout from '../components/Layout';
 
 export default function ProfileDetail() {
   const { id } = useParams();
@@ -13,42 +14,58 @@ export default function ProfileDetail() {
       .catch(() => navigate('/profiles'));
   }, [id]);
 
-  if (!profile) return <p style={{ padding: 24 }}>Loading...</p>;
+  if (!profile) return <div style={{ padding: 40, color: '#888' }}>Loading...</div>;
 
   const fields = [
-    ['Name', profile.name],
-    ['Gender', profile.gender],
-    ['Gender Probability', `${(profile.gender_probability * 100).toFixed(0)}%`],
-    ['Age', profile.age],
-    ['Age Group', profile.age_group],
-    ['Country', profile.country_name],
-    ['Country Code', profile.country_id],
-    ['Country Probability', `${(profile.country_probability * 100).toFixed(0)}%`],
-    ['Created At', new Date(profile.created_at).toLocaleString()],
+    { label: 'Name', value: profile.name },
+    { label: 'Gender', value: profile.gender },
+    { label: 'Gender Probability', value: `${(profile.gender_probability * 100).toFixed(0)}%` },
+    { label: 'Age', value: profile.age },
+    { label: 'Age Group', value: profile.age_group },
+    { label: 'Country', value: profile.country_name },
+    { label: 'Country Code', value: profile.country_id },
+    { label: 'Country Probability', value: `${(profile.country_probability * 100).toFixed(0)}%` },
+    { label: 'Created At', value: new Date(profile.created_at).toLocaleString() },
   ];
 
   return (
-    <div style={styles.container}>
-      <button onClick={() => navigate('/profiles')} style={styles.back}>← Back to Profiles</button>
-      <h1 style={styles.heading}>{profile.name}</h1>
-      <div style={styles.card}>
-        {fields.map(([label, value]) => (
-          <div key={label} style={styles.row}>
-            <span style={styles.label}>{label}</span>
-            <span style={styles.value}>{value}</span>
+    <Layout>
+      <div style={styles.container}>
+        <button onClick={() => navigate('/profiles')} style={styles.back}>← Back to Profiles</button>
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <div style={styles.avatar}>{profile.name[0].toUpperCase()}</div>
+            <div>
+              <h1 style={styles.name}>{profile.name}</h1>
+              <span style={{ ...styles.genderBadge, background: profile.gender === 'male' ? '#e3f2fd' : '#fce4ec', color: profile.gender === 'male' ? '#1565c0' : '#c62828' }}>
+                {profile.gender}
+              </span>
+            </div>
           </div>
-        ))}
+          <div style={styles.fields}>
+            {fields.map(({ label, value }) => (
+              <div key={label} style={styles.field}>
+                <span style={styles.label}>{label}</span>
+                <span style={styles.value}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 
 const styles = {
-  container: { padding: '40px', maxWidth: '600px', margin: '0 auto' },
-  back: { background: 'none', border: 'none', cursor: 'pointer', color: '#24292e', marginBottom: '16px', fontSize: '14px', padding: 0 },
-  heading: { fontSize: '28px', marginBottom: '24px' },
-  card: { background: '#fff', border: '1px solid #e0e0e0', borderRadius: '10px', overflow: 'hidden' },
-  row: { display: 'flex', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #e0e0e0' },
-  label: { color: '#666', fontWeight: '500' },
-  value: { fontWeight: '600' },
+  container: { maxWidth: '640px' },
+  back: { background: 'none', border: 'none', cursor: 'pointer', color: '#1a1a2e', marginBottom: '20px', fontSize: '14px', padding: 0, fontWeight: '500' },
+  card: { background: '#fff', borderRadius: '16px', border: '1px solid #e8eaed', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' },
+  cardHeader: { display: 'flex', alignItems: 'center', gap: '16px', padding: '24px', borderBottom: '1px solid #e8eaed', background: '#f8f9fa' },
+  avatar: { width: '56px', height: '56px', background: '#1a1a2e', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: '700' },
+  name: { fontSize: '22px', fontWeight: '700', color: '#1a1a2e', marginBottom: '6px' },
+  genderBadge: { padding: '3px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', textTransform: 'capitalize' },
+  fields: {},
+  field: { display: 'flex', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid #f5f5f5' },
+  label: { color: '#888', fontSize: '14px' },
+  value: { fontWeight: '600', color: '#1a1a2e', fontSize: '14px', textTransform: 'capitalize' },
 };
