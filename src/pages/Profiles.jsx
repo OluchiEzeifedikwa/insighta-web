@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import Layout from '../components/Layout';
 
 export default function Profiles() {
   const [profiles, setProfiles] = useState([]);
@@ -24,67 +25,97 @@ export default function Profiles() {
   useEffect(() => { fetchProfiles(); }, []);
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.heading}>Profiles</h1>
-      <p style={{ color: '#666', marginBottom: '16px' }}>{pagination.total.toLocaleString()} total profiles</p>
+    <Layout>
+      <div>
+        <div style={styles.header}>
+          <h1 style={styles.heading}>Profiles</h1>
+          <span style={styles.badge}>{pagination.total.toLocaleString()} total</span>
+        </div>
 
-      <div style={styles.filters}>
-        <select value={filters.gender} onChange={e => setFilters(f => ({ ...f, gender: e.target.value }))} style={styles.select}>
-          <option value="">All Genders</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-        <select value={filters.age_group} onChange={e => setFilters(f => ({ ...f, age_group: e.target.value }))} style={styles.select}>
-          <option value="">All Age Groups</option>
-          <option value="child">Child</option>
-          <option value="teenager">Teenager</option>
-          <option value="adult">Adult</option>
-          <option value="senior">Senior</option>
-        </select>
-        <input placeholder="Country code (e.g. NG)" value={filters.country_id} onChange={e => setFilters(f => ({ ...f, country_id: e.target.value }))} style={styles.input} />
-        <button onClick={() => fetchProfiles(1)} style={styles.btn}>Filter</button>
-        <button onClick={() => navigate('/dashboard')} style={{ ...styles.btn, background: '#666' }}>Back</button>
+        <div style={styles.filterBar}>
+          <select value={filters.gender} onChange={e => setFilters(f => ({ ...f, gender: e.target.value }))} style={styles.select}>
+            <option value="">All Genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <select value={filters.age_group} onChange={e => setFilters(f => ({ ...f, age_group: e.target.value }))} style={styles.select}>
+            <option value="">All Age Groups</option>
+            <option value="child">Child</option>
+            <option value="teenager">Teenager</option>
+            <option value="adult">Adult</option>
+            <option value="senior">Senior</option>
+          </select>
+          <input
+            placeholder="Country code (e.g. NG)"
+            value={filters.country_id}
+            onChange={e => setFilters(f => ({ ...f, country_id: e.target.value.toUpperCase() }))}
+            style={styles.input}
+            maxLength={2}
+          />
+          <button onClick={() => fetchProfiles(1)} style={styles.filterBtn}>Apply Filters</button>
+          <button onClick={() => { setFilters({ gender: '', country_id: '', age_group: '' }); fetchProfiles(1); }} style={styles.clearBtn}>Clear</button>
+        </div>
+
+        <div style={styles.tableWrapper}>
+          {loading ? (
+            <div style={styles.loadingRow}>Loading profiles...</div>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.thead}>
+                  {['Name', 'Gender', 'Age', 'Age Group', 'Country'].map(h => (
+                    <th key={h} style={styles.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {profiles.map((p, i) => (
+                  <tr key={p.id} onClick={() => navigate(`/profiles/${p.id}`)} style={{ ...styles.row, background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                    <td style={{ ...styles.td, fontWeight: '600', color: '#1a1a2e' }}>{p.name}</td>
+                    <td style={styles.td}>
+                      <span style={{ ...styles.genderBadge, background: p.gender === 'male' ? '#e3f2fd' : '#fce4ec', color: p.gender === 'male' ? '#1565c0' : '#c62828' }}>
+                        {p.gender}
+                      </span>
+                    </td>
+                    <td style={styles.td}>{p.age}</td>
+                    <td style={styles.td}><span style={styles.ageBadge}>{p.age_group}</span></td>
+                    <td style={styles.td}>{p.country_name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div style={styles.pagination}>
+          <button disabled={pagination.page <= 1} onClick={() => fetchProfiles(pagination.page - 1)} style={styles.pageBtn}>← Prev</button>
+          <span style={styles.pageInfo}>Page {pagination.page} of {pagination.total_pages}</span>
+          <button disabled={pagination.page >= pagination.total_pages} onClick={() => fetchProfiles(pagination.page + 1)} style={styles.pageBtn}>Next →</button>
+        </div>
       </div>
-
-      {loading ? <p>Loading...</p> : (
-        <table style={styles.table}>
-          <thead>
-            <tr>{['Name', 'Gender', 'Age', 'Age Group', 'Country'].map(h => <th key={h} style={styles.th}>{h}</th>)}</tr>
-          </thead>
-          <tbody>
-            {profiles.map(p => (
-              <tr key={p.id} onClick={() => navigate(`/profiles/${p.id}`)} style={styles.row}>
-                <td style={styles.td}>{p.name}</td>
-                <td style={styles.td}>{p.gender}</td>
-                <td style={styles.td}>{p.age}</td>
-                <td style={styles.td}>{p.age_group}</td>
-                <td style={styles.td}>{p.country_name}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div style={styles.pagination}>
-        <button disabled={pagination.page <= 1} onClick={() => fetchProfiles(pagination.page - 1)} style={styles.pageBtn}>Prev</button>
-        <span>Page {pagination.page} of {pagination.total_pages}</span>
-        <button disabled={pagination.page >= pagination.total_pages} onClick={() => fetchProfiles(pagination.page + 1)} style={styles.pageBtn}>Next</button>
-      </div>
-    </div>
+    </Layout>
   );
 }
 
 const styles = {
-  container: { padding: '40px', maxWidth: '1000px', margin: '0 auto' },
-  heading: { fontSize: '28px', marginBottom: '4px' },
-  filters: { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' },
-  select: { padding: '8px', borderRadius: '6px', border: '1px solid #ccc' },
-  input: { padding: '8px', borderRadius: '6px', border: '1px solid #ccc' },
-  btn: { background: '#24292e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#fff' },
-  th: { textAlign: 'left', padding: '12px', borderBottom: '2px solid #e0e0e0', fontWeight: '600' },
-  td: { padding: '12px', borderBottom: '1px solid #e0e0e0' },
-  row: { cursor: 'pointer' },
-  pagination: { display: 'flex', gap: '16px', alignItems: 'center', marginTop: '20px' },
-  pageBtn: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #ccc', cursor: 'pointer' },
+  header: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' },
+  heading: { fontSize: '28px', fontWeight: '700', color: '#1a1a2e' },
+  badge: { background: '#e8f5e9', color: '#2e7d32', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' },
+  filterBar: { display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '10px', border: '1px solid #e8eaed' },
+  select: { padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', color: '#333', background: '#fff' },
+  input: { padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', width: '160px' },
+  filterBtn: { background: '#1a1a2e', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' },
+  clearBtn: { background: '#f5f5f5', color: '#666', border: '1px solid #ddd', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' },
+  tableWrapper: { background: '#fff', borderRadius: '12px', border: '1px solid #e8eaed', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
+  loadingRow: { padding: '40px', textAlign: 'center', color: '#888' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  thead: { background: '#f8f9fa' },
+  th: { textAlign: 'left', padding: '14px 16px', fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #e8eaed' },
+  row: { cursor: 'pointer', transition: 'background 0.15s' },
+  td: { padding: '14px 16px', fontSize: '14px', color: '#444', borderBottom: '1px solid #f0f0f0' },
+  genderBadge: { padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', textTransform: 'capitalize' },
+  ageBadge: { background: '#f3f4f6', color: '#555', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', textTransform: 'capitalize' },
+  pagination: { display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center', marginTop: '24px' },
+  pageBtn: { background: '#fff', border: '1px solid #ddd', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' },
+  pageInfo: { color: '#666', fontSize: '14px' },
 };
