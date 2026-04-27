@@ -1,4 +1,5 @@
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://mesh-data-persistence.vercel.app';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+if (!BACKEND_URL) throw new Error('VITE_BACKEND_URL environment variable is not set');
 
 export default function Login() {
   const handleLogin = () => {
