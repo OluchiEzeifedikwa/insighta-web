@@ -7,7 +7,12 @@ export default function Profiles() {
   const [profiles, setProfiles] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, total_pages: 1, total: 0 });
   const [filters, setFilters] = useState({ gender: '', country_id: '', age_group: '' });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
   const navigate = useNavigate();
 
   function fetchProfiles(page = 1) {
@@ -22,14 +27,70 @@ export default function Profiles() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { fetchProfiles(); }, []);
+  async function handleCreate(e) {
+    e.preventDefault();
+    if (!createName.trim()) return;
+    setCreateLoading(true);
+    setCreateError('');
+    try {
+      await api.post('/api/profiles', { name: createName.trim() });
+      setShowCreate(false);
+      setCreateName('');
+      fetchProfiles(1);
+    } catch (err) {
+      setCreateError(err.response?.data?.message || 'Failed to create profile');
+    } finally {
+      setCreateLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    Promise.all([
+      api.get('/auth/me'),
+      api.get('/api/profiles', { params: { page: 1, limit: 10 } }),
+    ]).then(([userRes, profilesRes]) => {
+      setUser(userRes.data.data);
+      setProfiles(profilesRes.data.data);
+      setPagination({ page: profilesRes.data.page, total_pages: profilesRes.data.total_pages, total: profilesRes.data.total });
+      setLoading(false);
+    }).catch(() => navigate('/'));
+  }, []);
 
   return (
     <Layout>
       <div>
+        {showCreate && (
+          <div style={styles.overlay}>
+            <div style={styles.modal}>
+              <h2 style={styles.modalTitle}>Create Profile</h2>
+              <form onSubmit={handleCreate}>
+                <input
+                  style={styles.modalInput}
+                  placeholder="Full name (e.g. Harriet Tubman)"
+                  value={createName}
+                  onChange={e => setCreateName(e.target.value)}
+                  autoFocus
+                />
+                {createError && <p style={styles.modalError}>{createError}</p>}
+                <div style={styles.modalActions}>
+                  <button type="button" onClick={() => { setShowCreate(false); setCreateName(''); setCreateError(''); }} style={styles.cancelBtn}>Cancel</button>
+                  <button type="submit" disabled={createLoading || !createName.trim()} style={styles.submitBtn}>
+                    {createLoading ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         <div style={styles.header}>
-          <h1 style={styles.heading}>Profiles</h1>
-          <span style={styles.badge}>{pagination.total.toLocaleString()} total</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 style={styles.heading}>Profiles</h1>
+            <span style={styles.badge}>{pagination.total.toLocaleString()} total</span>
+          </div>
+          {user?.role === 'admin' && (
+            <button onClick={() => setShowCreate(true)} style={styles.createBtn}>+ Create Profile</button>
+          )}
         </div>
 
         <div style={styles.filterBar}>
@@ -118,4 +179,13 @@ const styles = {
   pagination: { display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center', marginTop: '24px' },
   pageBtn: { background: '#fff', border: '1px solid #ddd', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' },
   pageInfo: { color: '#666', fontSize: '14px' },
+  createBtn: { background: '#1a1a2e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
+  modal: { background: '#fff', borderRadius: '14px', padding: '32px', width: '100%', maxWidth: '440px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' },
+  modalTitle: { fontSize: '20px', fontWeight: '700', color: '#1a1a2e', marginBottom: '20px' },
+  modalInput: { width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box', marginBottom: '12px' },
+  modalError: { color: '#c62828', fontSize: '13px', marginBottom: '12px' },
+  modalActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' },
+  cancelBtn: { background: '#f5f5f5', color: '#666', border: '1px solid #ddd', padding: '9px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+  submitBtn: { background: '#1a1a2e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' },
 };
