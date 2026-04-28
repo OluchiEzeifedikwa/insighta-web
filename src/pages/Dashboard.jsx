@@ -66,6 +66,13 @@ export default function Dashboard() {
               <div style={styles.actionTitle}>Account</div>
               <div style={styles.actionDesc}>View your profile</div>
             </div>
+            {user?.role === 'admin' && (
+              <div style={styles.actionCard} onClick={() => navigate('/profiles')}>
+                <div style={styles.actionIcon}>➕</div>
+                <div style={styles.actionTitle}>Create Profile</div>
+                <div style={styles.actionDesc}>Add a new profile (admin only)</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
