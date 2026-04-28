@@ -48,9 +48,10 @@ All interfaces share the same backend as a single source of truth.
 
 ## CSRF Protection
 
-- On logout and other state-changing requests, the portal fetches a CSRF token from `GET /auth/csrf-token`
-- The token is sent as an `X-CSRF-Token` header on the request
-- The backend validates this token before processing
+- An Axios request interceptor automatically fetches a CSRF token from `GET /auth/csrf-token` before every `POST`, `PUT`, `PATCH`, and `DELETE` request
+- The token is cached in memory and attached as an `X-CSRF-Token` header
+- On a `403` response the token is cleared and re-fetched once to handle expiry
+- The backend validates the token against the `csrf_token` cookie before processing
 
 ---
 
@@ -63,7 +64,9 @@ The backend enforces two roles:
 | `admin` | Create profiles, delete profiles, list, search, export |
 | `analyst` | List, search, export profiles (read-only) |
 
-The web portal reflects these roles — restricted actions return `403 Forbidden` from the backend.
+The web portal reflects these roles in two ways:
+- Admin-only UI elements (e.g. the Create Profile button and Dashboard quick action) are conditionally rendered and hidden from analysts
+- Restricted API actions return `403 Forbidden` from the backend as a second line of enforcement
 
 ---
 
