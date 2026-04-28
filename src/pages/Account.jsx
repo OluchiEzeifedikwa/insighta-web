@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { csrfPost, clearCsrfToken } from '../lib/csrf';
 import Layout from '../components/Layout';
 
 export default function Account() {
@@ -15,8 +14,7 @@ export default function Account() {
   }, []);
 
   async function handleLogout() {
-    try { await csrfPost('/auth/logout'); } catch { /* proceed */ }
-    clearCsrfToken();
+    try { await api.post('/auth/logout'); } catch { /* proceed */ }
     navigate('/');
   }
 
